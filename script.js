@@ -47,13 +47,24 @@ function keydownfunction (event) {
 var body = document.querySelector("body");
 var correct;
 var miss;
+var frame = document.createElement("main");
+var score_card = document.createElement("table");
+var score_header = document.createElement("tr");
+var score_columns = document.createElement("tr");
+var score_title = document.createElement("th");
+var score_col_left = document.createElement("td");
+var score_col_right =  document.createElement("td");
+
+
 
 function landing_page(){
+    
+    document.querySelector("main").replaceChildren(); // clear the body
     console.log("Landing Page");
     var start_box = document.createElement("div");
     var start_button = document.createElement("button");
 
-    body.appendChild(start_box);
+    frame.appendChild(start_box);
     start_box.appendChild(start_button);
 
     start_box.setAttribute("id","start_box");
@@ -61,9 +72,9 @@ function landing_page(){
 
     start_button.addEventListener("click",begin_game);
 
-    start_button.textContent = "Start Game";
-    body.setAttribute("style",
-        "display:flex; flex-direction:column; align-items:center; height:100vh; justify-content:center; background-color:lightblue;");
+    start_button.textContent = "Start Quiz";
+    frame.setAttribute("style",
+        "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue;");
 
     start_box.setAttribute("style",
     "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center")
@@ -71,7 +82,7 @@ function landing_page(){
 
 function begin_game(){
 
-    document.querySelector("body").replaceChildren(); // clear the body
+    document.querySelector("main").replaceChildren(); // clear the body
 
     var card = document.createElement("div");
     var card_question = document.createElement("div");
@@ -86,6 +97,8 @@ function begin_game(){
     var driver = 0;
     miss = 0;
     correct = 0;
+    correctcount = 0;
+
 
     function create_questqueue(array){
         var driver = 0;
@@ -99,8 +112,9 @@ function begin_game(){
         return array;
     };
 
-    // I'm randomizing the order Fisher-Yates style. This is a well accepted method for randomizing an ordered array.
+    
     function randomize_queue(array){
+        // I'm randomizing the order Fisher-Yates style. This is a well accepted method for randomizing an ordered array.
         var random_index = [];
         var order_index = array.length, random_index;
 
@@ -159,52 +173,63 @@ function begin_game(){
                     driver--;
                     } // backspace
             }; // enter
-        } else if (keycode === 13){ // hit enter
+        } else if (keycode === 13){ // hit enter 
             checkanswer();
         };
     };
 
     function checkanswer(){
-        
-        function checkletter(testletter, answer){
-            testletter = testletter.toLowerCase();
-            answer = answer.toLowerCase();
-            if (testletter === answer) {
-                return true;
-            } else { return false
-            }
+
+        var markdown = false;
+
+        function checkletters(){
+            for (i =0; i<answer.length; i++){
+                var testletter = document.getElementById("slot"+[i.toString()]).textContent;
+                var answerletter = answer[i];
+                testletter = testletter.toLowerCase();
+                answerletter = answerletter.toLowerCase();
+                if (testletter !== answerletter) {
+                    markdown = true; // Any mistake is permanent
+                };
+             };
+             return markdown
         }; // Not going to punish upper and lower case, but no accents
 
-        function checkpunish(){
-            if (question_status.textContent === "Incorrect"){
+        function checkpunish(value){
+            if (value){
                 timeleft -= 5;
                 timer.textContent = timeleft;
                 miss = miss +1;
-            } else { correct = correct +1;}
+                question_status.textContent = "Incorrect. Please Try Again.";
+                console.log("miss");
+            } else { 
+                correct = correct +1;
+                question_status.textContent = "Correct";
+                console.log("corrrect")
+                moveforward();
+            };
         }
         
-        for (i =0; i<answer.length; i++){
-            var testletter = document.getElementById("slot"+[i.toString()]).textContent;
-            if (!checkletter(testletter, answer[i])){
-                question_status.textContent = "Incorrect";
-            } else {
-                question_status.textContent = "Correct";
-                moveforward();
-            }
-        }
-        checkpunish();
+        checkletters();
+        checkpunish(markdown);
     };
 
     function moveforward(){
-        question_queue.push(question_queue[0]);//put the current at the end of the queue
-        question_queue.shift();// remove the current from the front of the queue
-        answer_queue.push(answer_queue[0]);//put the current answer at the end of the queue
-        answer_queue.shift();// remove the current answer from the front of the queue 
-        driver = 0; 
-        console.log(question_queue);
-        console.log(answer_queue);
-        resetcard(); // reset the driver
-        callquestion(); // call the next question
+        correctcount = correctcount +1;
+        if (correctcount === answer_queue.length){
+            document.removeEventListener("keydown", keydownAction);
+            game_over()
+        } else { 
+            question_queue.push(question_queue[0]);//put the current at the end of the queue
+            question_queue.shift();// remove the current from the front of the queue
+            answer_queue.push(answer_queue[0]);//put the current answer at the end of the queue
+            answer_queue.shift();// remove the current answer from the front of the queue 
+            driver = 0; 
+            //console.log(question_queue);
+            //console.log(answer_queue);
+            resetcard(); // reset the driver
+            callquestion(); // call the next question
+         };
     };
 
     function setTime() {
@@ -214,6 +239,7 @@ function begin_game(){
         if(timeleft <= 0) {
             timer.textContent = "Time's Up!";
             clearInterval(timerInterval);
+            document.removeEventListener("keydown", keydownAction);
             game_over();
         }
     
@@ -226,8 +252,8 @@ function begin_game(){
     timer.setAttribute("id","timer");
     question_status.setAttribute("id","status");
 
-    body.appendChild(card);
-    body.appendChild(timer);
+    frame.appendChild(card);
+    frame.appendChild(timer);
     card.appendChild(card_question);
     card.appendChild(card_response);
     card.appendChild(question_status);
@@ -255,31 +281,91 @@ function begin_game(){
 }; // end of begin_game function
 
 function game_over(){
-    document.querySelector("body").replaceChildren(); // clear the body
-    console.log("Game Over");
     var scoreboard = document.createElement("div");
     var score_title = document.createElement("div");
     var score = document.createElement("div");
-    console.log(correct);
-    console.log(miss);
-    console.log(correct+miss);
+    var submission = document.createElement("div");
+    var prompt_button = document.createElement("button");
+    var initials_box = document.createElement("textarea");
+    var initials = '';
+    var big_score = [];
 
-    body.appendChild(scoreboard);
+    function submit (){
+       
+        function save(event){
+            event.preventDefault();
+            console.log(initials);
+
+            var row = score_card.insertRow();
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            cell1.innerText = initials;
+            cell2.innerText = big_score;
+
+            /*var new_row_index = score_card.rows.length;
+            var new_row = score_card.insertRow(new_row_index);
+            var new_initials = initials;
+            var new_score = big_score;
+            console.log(score_card.rows.length);
+            console.log(new_row_index);
+            console.log(initials);
+            new_initials = new_row.insertCell(0);
+            new_score = new_row.insertCell(1);*/
+            score_card.setAttribute("style","display:flex; flex-direction:column");
+            landing_page(); // restart the game
+        };
+    
+
+        prompt_button.textContent ="Save"
+        scoreboard.appendChild(initials_box);
+        initials = document.getElementById("initials_box").value;
+        prompt_button.addEventListener("click", save);
+    };
+
+    document.querySelector("main").replaceChildren();
+    console.log("Game Over");
+
+    frame.appendChild(scoreboard);
     scoreboard.appendChild(score_title);
     scoreboard.appendChild(score);
+    scoreboard.appendChild(submission);
+    submission.appendChild(prompt_button);
+
+    prompt_button.addEventListener("click",submit);
+    prompt_button.textContent = "Would You like to Save your Score?";
+
 
     scoreboard.setAttribute("id","scoreboard");
     score_title.setAttribute("id","score_title");
+    initials_box.setAttribute("id","initials_box")
     score.setAttribute("id","score");
 
     scoreboard.setAttribute("style",
     "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
 
-
-
     score_title.textContent = "Your Score is:";
     score.textContent = correct.toString()+"/"+(correct+miss).toString();
-
+    big_score = score.textContent;
 }
+
+
+body.setAttribute("style","boxSizing: border-box; display:flex; flex-direction:row");
+
+body.appendChild(frame);
+body.appendChild(score_card);
+score_card.appendChild(score_header);
+score_card.appendChild(score_columns);
+score_header.appendChild(score_title);
+score_columns.appendChild(score_col_left);
+score_columns.appendChild(score_col_right);
+
+score_title.textContent = "Your High Scores";
+score_col_left.textContent = "Initials";
+score_col_right.textContent = "Score";
+
+score_col_left.setAttribute("style", "width:50%");
+score_col_right.setAttribute("style", "width:50%");
+score_card.setAttribute("id","score_card");
+score_card.setAttribute("style", "display:none; padding:15px");
 
 landing_page();
