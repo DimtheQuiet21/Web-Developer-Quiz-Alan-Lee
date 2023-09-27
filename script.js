@@ -45,60 +45,124 @@ function keydownfunction (event) {
 */
 
 var body = document.querySelector("body");
-var correct;
-var miss;
 var frame = document.createElement("main");
-var score_card = document.createElement("table");
-var score_header = document.createElement("tr");
-var score_columns = document.createElement("tr");
-var score_title = document.createElement("th");
-var score_col_left = document.createElement("td");
-var score_col_right =  document.createElement("td");
+var scores = [];
+var storedscore = JSON.parse(localStorage.getItem("highscores"));
 
+function create_scoretable(){
+    var score_card = document.createElement("table");
+    var score_header = document.createElement("tr");
+    var score_columns = document.createElement("tr");
+    var score_title = document.createElement("th");
+    var score_col_left = document.createElement("td");
+    var score_col_right =  document.createElement("td");
 
+    function render_scores (storedscore){
+        console.log("rendering");
+        for (i =0; i< storedscore.length; i++){
+                var row = score_card.insertRow();
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                cell1.innerText = storedscore[i][0];
+                cell2.innerText = storedscore[i][1];
+        };
+    };
 
-function landing_page(){
-    
-    document.querySelector("main").replaceChildren(); // clear the body
-    console.log("Landing Page");
-    var start_box = document.createElement("div");
-    var start_button = document.createElement("button");
+    function stylize (){
+        body.appendChild(score_card);
+        score_card.appendChild(score_header);
+        score_card.appendChild(score_columns);
+        score_header.appendChild(score_title);
+        score_columns.appendChild(score_col_left);
+        score_columns.appendChild(score_col_right);
+        score_title.textContent = "Your High Scores";
+        score_col_left.textContent = "Initials";
+        score_col_right.textContent = "Score";
+        score_col_left.setAttribute("style", "width:50%");
+        score_col_right.setAttribute("style", "width:50%");
+        score_card.setAttribute("id","score_card");
+    }
 
-    frame.appendChild(start_box);
-    start_box.appendChild(start_button);
-
-    start_box.setAttribute("id","start_box");
-    start_button.setAttribute("id","start_button");
-
-    start_button.addEventListener("click",begin_game);
-
-    start_button.textContent = "Start Quiz";
-    frame.setAttribute("style",
-        "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue;");
-
-    start_box.setAttribute("style",
-    "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center")
+    stylize();
+    if (storedscore !== null) {
+        render_scores(storedscore);
+        score_card.setAttribute("style","display:flex; flex-direction:column; padding:15px");
+    } else {
+        score_card.setAttribute("style", "display:none; padding:15px");
+    };
 };
 
-function begin_game(){
+function landing_page(){
 
-    document.querySelector("main").replaceChildren(); // clear the body
+    var start_box = document.createElement("div");
+    var start_button_fillin = document.createElement("button");
+    var start_button_multi = document.createElement("button");
+    var clear_button = document.createElement("button");
+    var game_type = "";
+
+    function stylize() {
+        frame.appendChild(start_box);
+        start_box.appendChild(start_button_fillin);
+        start_box.appendChild(start_button_multi);
+        start_box.appendChild(clear_button);
+    
+        start_box.setAttribute("id","start_box");
+    
+        start_button_fillin.setAttribute("id","start_button");
+        start_button_fillin.textContent = "Start Fill-in-Blank Quiz";
+        start_button_multi.setAttribute("id","start_button");
+        start_button_multi.textContent = "Start Multiple Choice Quiz";
+        clear_button.setAttribute("id","clear_button");
+        clear_button.textContent = "Clear High Scores";
+
+        
+        frame.setAttribute("style", "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue;");
+        start_box.setAttribute("style", "display:flex; flex-direction:row; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
+        for (i = 0; i < start_box.children.length; i++){
+            start_box.children[i].setAttribute("style", "padding:10px; margin:30px; font-size:1.7em");
+        };
+    };
+
+    function clear_scores(){
+        if (storedscore !== null){
+            storedscore = JSON.parse(localStorage.getItem("highscores")) // I want to call this to capture any current storedscores.
+            console.log(score_card.rows.length);
+            console.log(score_card);
+            localStorage.removeItem("highscores");
+            storedscore = [];
+            for (i =0; i< score_card.rows.length-2; i++){ // Deleting from bottom up, leaving top rows
+                var row_count = score_card.rows.length;
+                score_card.deleteRow(row_count-1); //Just run this for loop enough times to kill everything.
+            };
+            score_card.setAttribute("style", "display:none; padding:15px");
+            console.log("clearing");
+        };
+    };
+    
+    document.querySelector("main").replaceChildren(); // clear the mainframe
+    start_button_fillin.addEventListener("click",function () {game_type = "fill"; begin_game(game_type)});;
+    start_button_multi.addEventListener("click",function () {game_type = "multi"; begin_game(game_type)});
+    clear_button.addEventListener("click", clear_scores);
+    stylize ();
+};
+
+
+function begin_game(game_type){
 
     var card = document.createElement("div");
     var card_question = document.createElement("div");
     var card_response = document.createElement("div");
     var card_answer = document.createElement("ol");
-    var text_slot = document.createElement("li");
+    var answer_slot = [document.createElement("li")];
     var question_status = document.createElement("div");
     var timer = document.createElement("div");
     var timeleft = 60;
+    var correct = 0;
+    var miss = 0;
     var question_queue = [];
     var answer_queue =[];
     var driver = 0;
-    miss = 0;
-    correct = 0;
-    correctcount = 0;
-
+    var correctcount = 0;
 
     function create_questqueue(array){
         var driver = 0;
@@ -112,50 +176,81 @@ function begin_game(){
         return array;
     };
 
-    
+    function create_answerqueue(array){
+        for (i = 0; i<question_queue.length; i++){
+            array[i] = question_queue[i] + 1;
+        }
+        return array;
+    }
+
     function randomize_queue(array){
         // I'm randomizing the order Fisher-Yates style. This is a well accepted method for randomizing an ordered array.
         var random_index = [];
         var order_index = array.length, random_index;
-
+    
         while (order_index > 0){
             // Pick a remaining available number
             random_index =     Math.floor(Math.random() * order_index);
             order_index--;
-
+    
             //Swap it with current element;
             [array[order_index], array[random_index]] = [array[random_index], array[order_index]];
         }
         return array;
     };
 
-    function create_answerqueue(array){
-        for (i = 0; i<question_queue.length; i++){
-            array[i] = question_queue[i] + 1;
-        }
-        return array;
-    };
-
-    function resetcard(){
-        for (i =0; i<answer.length; i++){
-        document.getElementById("slot"+[i.toString()]).remove(); //got to kill the old slots to make room for new
+    function resetcard(parent){
+        while (parent.firstChild){
+            parent.removeChild(parent.firstChild);//remove the children of the feature.
         }
     };
 
     function callquestion(){
         // ToDO: Call question from array
         card_question.innerHTML = questionaire[question_queue[0]];
-        //card_answer.innerHTML = Array(questionaire[answer_queue[0]].length)
-        answer = questionaire[answer_queue[0]].split("");// split the answer into an array of characters
-        question_status.textContent = " ";
-        console.log(answer);
-        for (i = 0; i < answer.length; i++){
-    // replace each character with an underscore;
-            text_slot = document.createElement("li");
-            text_slot.setAttribute("id","slot" + i.toString());
-            text_slot.textContent = "-";
-            card_answer.appendChild(text_slot);
+        if (game_type === "fill"){
+            answer = questionaire[answer_queue[0]].split("");// split the answer into an array of characters
+            question_status.textContent = " ";
+            //console.log(answer);
+            for (i = 0; i < answer.length; i++){
+        // replace each character with an underscore;
+                answer_slot = document.createElement("li");
+                answer_slot.setAttribute("id","slot" + i.toString());
+                answer_slot.textContent = "-";
+                card_answer.appendChild(answer_slot);
+            };
         };
+        if (game_type === "multi"){
+            var wrong_choice = [];
+            var correct_choice = [];// Correct Choice for the multiple choice options
+            var choice_queue = [];
+            var choice = [];
+            function fill_choices (){
+                wrong_choice = answer_queue.slice(1);
+                correct_choice = answer_queue[0];
+                randomize_queue(wrong_choice); //randomize the wrong choices, take the first three
+                for (i = 0; i < 3; i++){
+                    choice_queue[i] = wrong_choice[i];
+                };
+            choice_queue.push(correct_choice); //Add the correct answer back
+            randomize_queue(choice_queue); //Randomize answers again
+            };
+            
+            fill_choices();
+            answer = questionaire[answer_queue[0]];
+            question_status.textContent = " ";
+            randomize_queue(choice_queue);
+            for (i = 0; i < 4; i++){
+                answer_slot = document.createElement("button");
+                answer_slot.setAttribute("id","button" + i.toString());
+                answer_slot.innerHTML = questionaire[choice_queue[i]];
+                card_answer.appendChild(answer_slot);
+                answer_slot.addEventListener("click", function(event){
+                    choice = event.target.innerHTML;
+                    checkanswer(choice)});
+                //answer_slot.addEventListener("click", checkanswer());
+                }
+        }
     };
 
     function keydownAction(event) {
@@ -178,24 +273,13 @@ function begin_game(){
         };
     };
 
-    function checkanswer(){
+    function checkanswer(choice){
 
+        console.log("checking");
         var markdown = false;
-
-        function checkletters(){
-            for (i =0; i<answer.length; i++){
-                var testletter = document.getElementById("slot"+[i.toString()]).textContent;
-                var answerletter = answer[i];
-                testletter = testletter.toLowerCase();
-                answerletter = answerletter.toLowerCase();
-                if (testletter !== answerletter) {
-                    markdown = true; // Any mistake is permanent
-                };
-             };
-             return markdown
-        }; // Not going to punish upper and lower case, but no accents
-
+        
         function checkpunish(value){
+            console.log("punshing");
             if (value){
                 timeleft -= 5;
                 timer.textContent = timeleft;
@@ -210,15 +294,43 @@ function begin_game(){
             };
         }
         
-        checkletters();
-        checkpunish(markdown);
+        function checkletter (){
+            console.log("filling")
+            for (i =0; i<answer.length; i++){
+                var testletter = document.getElementById("slot"+[i.toString()]).textContent;
+                var answerletter = answer[i];
+                testletter = testletter.toLowerCase();
+                answerletter = answerletter.toLowerCase();
+                if (testletter !== answerletter) {
+                    markdown = true; // Any mistake is permanent
+                    console.log("marking");
+                };
+            };
+                return markdown
+        
+            };
+        
+        function checkchoice (choice){
+            if (choice !== answer){
+                markdown = true;
+            };
+            return markdown;
+        };
+
+        if (game_type === "fill"){
+            checkletter ()};
+
+        if (game_type === "multi"){
+            checkchoice (choice);}
+
+        checkpunish(markdown);   // Not going to punish upper and lower case, but no accents       
     };
 
     function moveforward(){
         correctcount = correctcount +1;
         if (correctcount === answer_queue.length){
             document.removeEventListener("keydown", keydownAction);
-            game_over()
+            game_over(correct,miss)
         } else { 
             question_queue.push(question_queue[0]);//put the current at the end of the queue
             question_queue.shift();// remove the current from the front of the queue
@@ -227,7 +339,7 @@ function begin_game(){
             driver = 0; 
             //console.log(question_queue);
             //console.log(answer_queue);
-            resetcard(); // reset the driver
+            resetcard(card_answer); // reset the driver
             callquestion(); // call the next question
          };
     };
@@ -240,47 +352,52 @@ function begin_game(){
             timer.textContent = "Time's Up!";
             clearInterval(timerInterval);
             document.removeEventListener("keydown", keydownAction);
-            game_over();
+            game_over(correct,miss);
         }
     
         }, 1000);
     };
     
-    card.setAttribute("id","card");
-    card_question.setAttribute("id","question");
-    card_response.setAttribute("id","response");
-    timer.setAttribute("id","timer");
-    question_status.setAttribute("id","status");
+    function stylize (){
+        card.setAttribute("id","card");
+        card_question.setAttribute("id","question");
+        card_response.setAttribute("id","response");
+        card_answer.setAttribute("id","answer");
 
-    frame.appendChild(card);
-    frame.appendChild(timer);
-    card.appendChild(card_question);
-    card.appendChild(card_response);
-    card.appendChild(question_status);
-    card.appendChild(timer);
-    card_response.appendChild(card_answer);
-    card_answer.appendChild(text_slot);
+        timer.setAttribute("id","timer");
+        question_status.setAttribute("id","status");
 
-    card.setAttribute("style",
-        "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
-    card_answer.setAttribute("style",
-        "list-style-type:none; display:flex;flex-direction:row");    
+    
+        frame.appendChild(card);
+        frame.appendChild(timer);
+        card.appendChild(card_question);
+        card.appendChild(card_response);
+        card.appendChild(question_status);
+        card.appendChild(timer);
+        card_response.appendChild(card_answer);
+    
+        card.setAttribute("style",
+            "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
+        card_answer.setAttribute("style",
+            "list-style-type:none; display:flex;flex-direction:row"); 
+    };
+   
 
-
-
+    document.querySelector("main").replaceChildren(); // clear the mainframe
+    console.log(game_type);
+    stylize ();
     question_queue = create_questqueue(question_queue); // create the queue of questions (even numbers only becuase those are questions.)
-    console.log(question_queue);
-    question_queue = randomize_queue(question_queue); // randomize the order of the questions
-    console.log(question_queue);
-    answer_queue = create_answerqueue(answer_queue); // create the queue of answers (odd numbers only because those are answers.)
-    console.log(answer_queue);
-    callquestion();
+    question_queue = randomize_queue(question_queue);
+    answer_queue = create_answerqueue(answer_queue);
     timer.textContent = timeleft;
     setTime();
-    document.addEventListener("keydown", keydownAction);
+    callquestion();
+    if (game_type === "fill") {
+        document.addEventListener("keydown", keydownAction);
+    };
 }; // end of begin_game function
 
-function game_over(){
+function game_over(correct,miss){
     var scoreboard = document.createElement("div");
     var score_title = document.createElement("div");
     var score = document.createElement("div");
@@ -290,28 +407,25 @@ function game_over(){
     var initials = '';
     var big_score = [];
 
-    function submit (){
-       
-        function save(event){
+    function begin_save (){
+        function submit(event){
             event.preventDefault();
+            if (storedscore === null) {
+                storedscore = []; // This gives us a spot IF storedscore had no stored data
+            };
             console.log(initials);
-
+            console.log(storedscore);
             var row = score_card.insertRow();
             var cell1 = row.insertCell(0);
             var cell2 = row.insertCell(1);
             cell1.innerText = initials;
             cell2.innerText = big_score;
+            storedscore.push([initials,big_score]); //always add on to the existing highscores
+            console.log(storedscore)
+            localStorage.setItem("highscores", JSON.stringify(storedscore));
 
-            /*var new_row_index = score_card.rows.length;
-            var new_row = score_card.insertRow(new_row_index);
-            var new_initials = initials;
-            var new_score = big_score;
-            console.log(score_card.rows.length);
-            console.log(new_row_index);
-            console.log(initials);
-            new_initials = new_row.insertCell(0);
-            new_score = new_row.insertCell(1);*/
-            score_card.setAttribute("style","display:flex; flex-direction:column");
+
+            score_card.setAttribute("style","display:flex; flex-direction:column; padding:15px");
             landing_page(); // restart the game
         };
     
@@ -319,53 +433,44 @@ function game_over(){
         prompt_button.textContent ="Save"
         scoreboard.appendChild(initials_box);
         initials = document.getElementById("initials_box").value;
-        prompt_button.addEventListener("click", save);
+        prompt_button.addEventListener("click", submit);
+    };
+
+    function stylize () {
+        frame.appendChild(scoreboard);
+        scoreboard.appendChild(score_title);
+        scoreboard.appendChild(score);
+        scoreboard.appendChild(submission);
+        submission.appendChild(prompt_button);
+    
+        
+        prompt_button.textContent = "Would You like to Save your Score?";
+    
+    
+        scoreboard.setAttribute("id","scoreboard");
+        score_title.setAttribute("id","score_title");
+        initials_box.setAttribute("id","initials_box")
+        score.setAttribute("id","score");
+    
+        scoreboard.setAttribute("style",
+        "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
+    
+        score_title.textContent = "Your Score is:";
+        score.textContent = correct.toString()+"/"+(correct+miss).toString();
+        big_score = score.textContent;
     };
 
     document.querySelector("main").replaceChildren();
     console.log("Game Over");
+    stylize();
+    prompt_button.addEventListener("click",begin_save);
+    
 
-    frame.appendChild(scoreboard);
-    scoreboard.appendChild(score_title);
-    scoreboard.appendChild(score);
-    scoreboard.appendChild(submission);
-    submission.appendChild(prompt_button);
-
-    prompt_button.addEventListener("click",submit);
-    prompt_button.textContent = "Would You like to Save your Score?";
-
-
-    scoreboard.setAttribute("id","scoreboard");
-    score_title.setAttribute("id","score_title");
-    initials_box.setAttribute("id","initials_box")
-    score.setAttribute("id","score");
-
-    scoreboard.setAttribute("style",
-    "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
-
-    score_title.textContent = "Your Score is:";
-    score.textContent = correct.toString()+"/"+(correct+miss).toString();
-    big_score = score.textContent;
+  
 }
 
-
 body.setAttribute("style","boxSizing: border-box; display:flex; flex-direction:row");
-
 body.appendChild(frame);
-body.appendChild(score_card);
-score_card.appendChild(score_header);
-score_card.appendChild(score_columns);
-score_header.appendChild(score_title);
-score_columns.appendChild(score_col_left);
-score_columns.appendChild(score_col_right);
 
-score_title.textContent = "Your High Scores";
-score_col_left.textContent = "Initials";
-score_col_right.textContent = "Score";
-
-score_col_left.setAttribute("style", "width:50%");
-score_col_right.setAttribute("style", "width:50%");
-score_card.setAttribute("id","score_card");
-score_card.setAttribute("style", "display:none; padding:15px");
-
+create_scoretable();
 landing_page();
