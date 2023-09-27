@@ -1,48 +1,4 @@
-/* 
-Super Common Functions and Or Calls
-var xxx document.createElement()
-var XXX = document.querySelector()
-var XXX document.getElementById()
-var XXX document.getElementsByClassName()
-var XXX document.getElementsByTagName()
-var.innerHTML = "TEXT"
-var.setAttribute("style",";;;;;")
-var.textContent = "Site 3";
-var.appendChild();
-var.addEventListener("click", function() {});
-event.preventDefault(); // always under submission butons
-var.parseFloat(); // converrt string to float number
-var.toFixed(2); //rounds number to 2 decimal places
-document.addEventListener("keydown", keydownAction); // listen for keydown
-document.addEventListener("keyup", keyupAction); // listen for keyup
-event.stopPropagation(); // stops bubbling up click events
 
-addEventListener("click", function(event) {
-  var element = event.target; // The element clicked
-  var xxx = element.getAttribute("data-state") // snatching element attribute
-});
-
-function setTime() {
-  var timerInterval = setInterval(function() {
-    secondsLeft--; // Time Variable outside of function
-    var.textContent = secondsLeft;
-
-    if(secondsLeft === 0) {
-     DO THING
-    }
-
-  }, 1000);
-}
-
-function keydownfunction (event) {
-  // TODO: Complete keydown function
-  document.querySelector("#status").innerHTML = "KEYDOWN Event";
-  var.innerHTML = event.key; //The actual key pressed
-  var.innerHTML = event.code;
-  var.innerHTML = event.Keycode;
-} 
-
-*/
 
 var body = document.querySelector("body");
 var frame = document.createElement("main");
