@@ -55,20 +55,30 @@ function create_scoretable(){
 
 function landing_page(){
 
+    var title = document.createElement("h1");
+    var subtitle = document.createElement("h2");
     var start_box = document.createElement("div");
+    var button_box = document.createElement("div");
     var start_button_fillin = document.createElement("button");
     var start_button_multi = document.createElement("button");
     var clear_button = document.createElement("button");
     var game_type = "";
 
     function stylize() {
+
         frame.appendChild(start_box);
-        start_box.appendChild(start_button_fillin);
-        start_box.appendChild(start_button_multi);
-        start_box.appendChild(clear_button);
+        start_box.appendChild(title);
+        start_box.appendChild(subtitle);
+        start_box.appendChild(button_box);
+        button_box.appendChild(start_button_fillin);
+        button_box.appendChild(start_button_multi);
+        button_box.appendChild(clear_button);
     
+        title.setAttribute("id","title");
+        title.textContent = "Web Development Quiz"
+        subtitle.setAttribute("id","subtitle")
+        subtitle.textContent = "Pick a Quiz type below to begin studying! Watch out, you only have a minute to complete the Quiz!"
         start_box.setAttribute("id","start_box");
-    
         start_button_fillin.setAttribute("id","start_button");
         start_button_fillin.textContent = "Begin Fill-in-Blank Quiz";
         start_button_multi.setAttribute("id","start_button");
@@ -78,10 +88,13 @@ function landing_page(){
 
         
         frame.setAttribute("style", "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue; ");
-        start_box.setAttribute("style", card_style+" "+row_style);
+        start_box.setAttribute("style", card_style+ " " + col_style);
+        title.setAttribute("style", "font-size:5em; margin:30px;")
+        subtitle.setAttribute("style", "font-size:2em; margin:20px; text-align:center")
+        button_box.setAttribute("style", col_style);
         console.log( card_style+" "+row_style);
-        for (i = 0; i < start_box.children.length; i++){
-            start_box.children[i].setAttribute("style", button_style);
+        for (i = 0; i < button_box.children.length; i++){
+            button_box.children[i].setAttribute("style", button_style);
         };
     };
 
@@ -382,6 +395,7 @@ function game_over(correct,miss){
     var score = document.createElement("div");
     var submission = document.createElement("div");
     var prompt_button = document.createElement("button");
+    var esc_button = document.createElement("button");
     var initials_box = document.createElement("textarea");
     var initials = '';
     var big_score = [];
@@ -409,7 +423,7 @@ function game_over(correct,miss){
         };
     
 
-        prompt_button.textContent ="Save"
+        prompt_button.textContent ="Save";
         scoreboard.appendChild(initials_box);
         initials_box.setAttribute("style", "margin:50px; width:30%; font-size:1.5em; text-align:center; display:flex; justify-content:center");
         initials_box.setAttribute("placeholder", "Please Type your Initials Here")
@@ -424,11 +438,12 @@ function game_over(correct,miss){
         scorebox.appendChild(score);
         scorebox.appendChild(submission);
         submission.appendChild(prompt_button);
-    
-        
+        submission.appendChild(esc_button);
+
         prompt_button.textContent = "Would You like to Save your Score?";
-        prompt_button.setAttribute("style", button_style.replace("margin: 20px",""));
-    
+        prompt_button.setAttribute("style", button_style.replace("margin: 20px","margin: 10px auto"));
+        esc_button.textContent ="Start Over";
+        esc_button.setAttribute("style", button_style.replace("margin: 20px","margin: 10px auto"));
     
         scoreboard.setAttribute("id","scoreboard");
         scorebox.setAttribute("id","scorebox");
@@ -450,6 +465,7 @@ function game_over(correct,miss){
     console.log("Game Over");
     stylize();
     prompt_button.addEventListener("click",begin_save);
+    esc_button.addEventListener("click",landing_page);
     
 
   
