@@ -80,9 +80,9 @@ function landing_page(){
         subtitle.textContent = "Pick a Quiz type below to begin studying! Watch out, you only have a minute to complete the Quiz!"
         start_box.setAttribute("id","start_box");
         start_button_fillin.setAttribute("id","start_button");
-        start_button_fillin.textContent = "Begin Fill-in-Blank Quiz";
+        start_button_fillin.textContent = "Begin Fill-in-Blank Quiz (Hard Mode)";
         start_button_multi.setAttribute("id","start_button");
-        start_button_multi.textContent = "Begin Multiple Choice Quiz";
+        start_button_multi.textContent = "Begin Multiple Choice Quiz (Normal Mode)";
         clear_button.setAttribute("id","clear_button");
         clear_button.textContent = "Clear High Scores";
 
@@ -440,7 +440,7 @@ function game_over(correct,miss){
         submission.appendChild(prompt_button);
         submission.appendChild(esc_button);
 
-        prompt_button.textContent = "Would You like to Save your Score?";
+        prompt_button.textContent = "High Score? Click Here to Save It!";
         prompt_button.setAttribute("style", button_style.replace("margin: 20px","margin: 10px auto"));
         esc_button.textContent ="Start Over";
         esc_button.setAttribute("style", button_style.replace("margin: 20px","margin: 10px auto"));
