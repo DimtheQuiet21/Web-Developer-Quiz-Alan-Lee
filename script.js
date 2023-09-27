@@ -48,6 +48,11 @@ var body = document.querySelector("body");
 var frame = document.createElement("main");
 var scores = [];
 var storedscore = JSON.parse(localStorage.getItem("highscores"));
+var button_style = "width:100%; padding:10px; margin: 20px; font-size:1.7em; border-radius: 20px; background-color:rgb(240, 248, 255); box-shadow: 10px 10px 10px rgb(222, 184, 135)";
+var card_style = "width:85%; height:85%; background-color:antiquewhite; border-radius: 20px; box-shadow: 10px 10px 10px rgb(100, 149, 237);";
+var row_style = "display:flex; flex-direction:row; justify-content:center; align-items:center;"
+var col_style = "display:flex; flex-direction:column; justify-content:center; align-items:center;"
+
 
 function create_scoretable(){
     var score_card = document.createElement("table");
@@ -109,17 +114,18 @@ function landing_page(){
         start_box.setAttribute("id","start_box");
     
         start_button_fillin.setAttribute("id","start_button");
-        start_button_fillin.textContent = "Start Fill-in-Blank Quiz";
+        start_button_fillin.textContent = "Begin Fill-in-Blank Quiz";
         start_button_multi.setAttribute("id","start_button");
-        start_button_multi.textContent = "Start Multiple Choice Quiz";
+        start_button_multi.textContent = "Begin Multiple Choice Quiz";
         clear_button.setAttribute("id","clear_button");
         clear_button.textContent = "Clear High Scores";
 
         
-        frame.setAttribute("style", "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue;");
-        start_box.setAttribute("style", "display:flex; flex-direction:row; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
+        frame.setAttribute("style", "display:flex; flex-direction:column; align-items:center; width:100%; justify-content:center; background-color:lightblue; ");
+        start_box.setAttribute("style", card_style+" "+row_style);
+        console.log( card_style+" "+row_style);
         for (i = 0; i < start_box.children.length; i++){
-            start_box.children[i].setAttribute("style", "padding:10px; margin:30px; font-size:1.7em");
+            start_box.children[i].setAttribute("style", button_style);
         };
     };
 
@@ -216,6 +222,7 @@ function begin_game(game_type){
         // replace each character with an underscore;
                 answer_slot = document.createElement("li");
                 answer_slot.setAttribute("id","slot" + i.toString());
+                answer_slot.setAttribute("class","slot");
                 answer_slot.textContent = "-";
                 card_answer.appendChild(answer_slot);
             };
@@ -282,7 +289,7 @@ function begin_game(game_type){
             console.log("punshing");
             if (value){
                 timeleft -= 5;
-                timer.textContent = timeleft;
+                timer.textContent = "Seconds Remaining: " +timeleft;
                 miss = miss +1;
                 question_status.textContent = "Incorrect. Please Try Again.";
                 console.log("miss");
@@ -330,7 +337,8 @@ function begin_game(game_type){
         correctcount = correctcount +1;
         if (correctcount === answer_queue.length){
             document.removeEventListener("keydown", keydownAction);
-            game_over(correct,miss)
+            timeleft = 0;
+            game_over(correct,miss);
         } else { 
             question_queue.push(question_queue[0]);//put the current at the end of the queue
             question_queue.shift();// remove the current from the front of the queue
@@ -341,13 +349,14 @@ function begin_game(game_type){
             //console.log(answer_queue);
             resetcard(card_answer); // reset the driver
             callquestion(); // call the next question
+            stylize(); //gotta restyle the card
          };
     };
 
     function setTime() {
         var timerInterval = setInterval(function() {
         timeleft--; // Time Variable outside of function
-        timer.textContent = timeleft.toString();
+        timer.textContent = "Seconds Remaining: " + timeleft.toString();
         if(timeleft <= 0) {
             timer.textContent = "Time's Up!";
             clearInterval(timerInterval);
@@ -376,22 +385,35 @@ function begin_game(game_type){
         card.appendChild(timer);
         card_response.appendChild(card_answer);
     
-        card.setAttribute("style",
-            "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
-        card_answer.setAttribute("style",
-            "list-style-type:none; display:flex;flex-direction:row"); 
+        card.setAttribute("style", card_style+" "+col_style);
+        card_question.setAttribute("style", "font-size:1.5em; margin: 20px;")
+        timer.setAttribute("style", "margin:30px; font-size: 1.5em;")
+        if (game_type === "fill"){
+            card_answer.setAttribute("style", "list-style-type:none;" + row_style);
+            for (i =0; i< card_answer.children.length; i++){
+                card_answer.children[i].setAttribute("style","font-size:2em; margin: 3px");
+            };
+        };
+        if (game_type === "multi"){
+            card_answer.setAttribute("style","list-style-type:none;" + col_style);
+            for (i =0; i< card_answer.children.length; i++){
+                card_answer.children[i].setAttribute("style","margin: 3px;" + button_style);
+            };
+        };
+   
     };
    
 
     document.querySelector("main").replaceChildren(); // clear the mainframe
     console.log(game_type);
-    stylize ();
+
     question_queue = create_questqueue(question_queue); // create the queue of questions (even numbers only becuase those are questions.)
     question_queue = randomize_queue(question_queue);
     answer_queue = create_answerqueue(answer_queue);
-    timer.textContent = timeleft;
+    timer.textContent = "Seconds Remaining: " +timeleft;
     setTime();
     callquestion();
+    stylize ();
     if (game_type === "fill") {
         document.addEventListener("keydown", keydownAction);
     };
@@ -399,6 +421,7 @@ function begin_game(game_type){
 
 function game_over(correct,miss){
     var scoreboard = document.createElement("div");
+    var scorebox = document.createElement("div");
     var score_title = document.createElement("div");
     var score = document.createElement("div");
     var submission = document.createElement("div");
@@ -432,28 +455,35 @@ function game_over(correct,miss){
 
         prompt_button.textContent ="Save"
         scoreboard.appendChild(initials_box);
+        initials_box.setAttribute("style", "margin:50px; width:30%; font-size:1.5em; text-align:center; display:flex; justify-content:center");
+        initials_box.setAttribute("placeholder", "Please Type your Initials Here")
         initials = document.getElementById("initials_box").value;
         prompt_button.addEventListener("click", submit);
     };
 
     function stylize () {
         frame.appendChild(scoreboard);
-        scoreboard.appendChild(score_title);
-        scoreboard.appendChild(score);
-        scoreboard.appendChild(submission);
+        scoreboard.appendChild(scorebox);
+        scorebox.appendChild(score_title);
+        scorebox.appendChild(score);
+        scorebox.appendChild(submission);
         submission.appendChild(prompt_button);
     
         
         prompt_button.textContent = "Would You like to Save your Score?";
+        prompt_button.setAttribute("style", button_style.replace("margin: 20px",""));
     
     
         scoreboard.setAttribute("id","scoreboard");
+        scorebox.setAttribute("id","scorebox");
         score_title.setAttribute("id","score_title");
         initials_box.setAttribute("id","initials_box")
         score.setAttribute("id","score");
     
-        scoreboard.setAttribute("style",
-        "display:flex; flex-direction:column; width:50%; height:50%; background-color:antiquewhite; justify-content:center; align-items:center");
+        scoreboard.setAttribute("style", card_style + col_style);
+        scorebox.setAttribute("style", col_style);
+        score_title.setAttribute("style", "margin: 30px; font-size:2em");
+        score.setAttribute("style", "margin: 30px; font-size:2em");
     
         score_title.textContent = "Your Score is:";
         score.textContent = correct.toString()+"/"+(correct+miss).toString();
